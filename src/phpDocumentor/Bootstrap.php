@@ -120,6 +120,8 @@ class Bootstrap
      * If a composer.json is found we will try to extract the vendor folder name using the 'vendor-dir' configuration
      * option of composer or assume it is vendor if that option is not set.
      *
+     * The else statement attempts to find a composer.json in the remaining directories above what it searched for,
+	 * stopping at the root directory.
      *
      * If no custom composer.json can be found, then we assume that the vendor folder is that of phpDocumentor itself,
      * which is `../../vendor` starting from this folder.
@@ -140,7 +142,20 @@ class Bootstrap
         if (file_exists($composerConfigurationPath)) {
             $vendorDir = $rootFolderWhenInstalledWithComposer
                 . $this->getCustomVendorPathFromComposer($composerConfigurationPath);
-        }
+        } else {
+        	$dirCount = substr_count(realpath($rootFolderWhenInstalledWithComposer), "\\");
+        	for($i = 0; $i < $dirCount; $i++) {
+        		$rootFolderWhenInstalledWithComposer .= "../";
+
+        		$composerConfigurationPath = $rootFolderWhenInstalledWithComposer .'composer.json';
+        		if(file_exists($composerConfigurationPath)) {
+        			$vendorDir = $rootFolderWhenInstalledWithComposer
+						. $this->getCustomVendorPathFromComposer($composerConfigurationPath);
+        			break;
+				}
+			}
+
+		}
 
         return file_exists($vendorDir) ? $vendorDir : null;
     }
